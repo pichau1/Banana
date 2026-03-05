@@ -23,25 +23,27 @@ export function Auth() {
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    setTimeout(() => {
-      const result = authService.login(loginEmail, loginPassword);
-      setIsLoading(false);
+    try {
+      const result = await authService.login(loginEmail, loginPassword);
 
       if (result.success) {
         toast.success("Login realizado com sucesso!");
         navigate("/");
-        window.location.reload(); // Recarregar para atualizar o contexto
       } else {
         toast.error(result.error || "Erro ao fazer login");
       }
-    }, 500);
+    } catch (error) {
+      toast.error("Erro ao fazer login");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (registerPassword !== registerConfirmPassword) {
@@ -56,29 +58,31 @@ export function Auth() {
 
     setIsLoading(true);
 
-    setTimeout(() => {
-      const result = authService.register(registerName, registerEmail, registerPassword);
-      setIsLoading(false);
+    try {
+      const result = await authService.register(registerName, registerEmail, registerPassword);
 
       if (result.success) {
         toast.success("Cadastro realizado com sucesso!");
         navigate("/");
-        window.location.reload(); // Recarregar para atualizar o contexto
       } else {
         toast.error(result.error || "Erro ao cadastrar");
       }
-    }, 500);
+    } catch (error) {
+      toast.error("Erro ao cadastrar");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full mb-4">
-            <Heart className="h-8 w-8 text-white" />
+      <Card className="w-full max-w-md p-6 sm:p-8">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full mb-4">
+            <Heart className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">MindCare</h1>
-          <p className="text-gray-600">Seu espaço de cuidado emocional</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">MindCare</h1>
+          <p className="text-sm sm:text-base text-gray-600">Seu espaço de cuidado emocional</p>
         </div>
 
         <Tabs defaultValue="login" className="w-full">
@@ -208,8 +212,11 @@ export function Auth() {
           </TabsContent>
         </Tabs>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
+        <div className="mt-6 text-center text-xs sm:text-sm text-gray-600">
           <p>Seus dados são privados e seguros 🔒</p>
+          <p className="mt-2 text-xs text-gray-500">
+            Seu login funciona em todos os seus dispositivos
+          </p>
         </div>
       </Card>
     </div>

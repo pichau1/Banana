@@ -1,3 +1,6 @@
+import { createClient } from "@supabase/supabase-js";
+import { projectId, publicAnonKey } from "/utils/supabase/info";
+
 export interface User {
   id: string;
   name: string;
@@ -7,123 +10,143 @@ export interface User {
 }
 
 export interface UserData {
-  moodEntries: Array<{
-    date: string;
-    mood: number;
-    energy: number;
-    sleep: string;
-    appetite: string;
-    interest: string;
-    notes: string;
-  }>;
-  panicEvents: Array<{
-    date: string;
-    time: string;
-    severity: string;
-    duration: string;
-  }>;
-  communityPosts: Array<{
-    id: string;
-    content: string;
-    timestamp: string;
-    likes: number;
-    comments: number;
-  }>;
-  settings: {
-    name: string;
-    emergencyContact: string;
-    emergencyName: string;
-    notifications: boolean;
-    dailyReminders: boolean;
-    crisisAlerts: boolean;
-    autoSOS: boolean;
-  };
+  moodEntries: any[];
+  panicEvents: any[];
+  settings: any;
 }
 
+const supabaseUrl = `https://${projectId}.supabase.co`;
+const supabase = createClient(supabaseUrl, publicAnonKey);
+
 class AuthService {
+
   private currentUser: User | null = null;
+  private accessToken: string | null = null;
+
+  private userData: UserData = {
+    moodEntries: [],
+    panicEvents: [],
+    settings: {},
+  };
 
   constructor() {
     this.loadCurrentUser();
   }
 
-  private loadCurrentUser() {
-    const userJson = localStorage.getItem("currentUser");
-    if (userJson) {
-      this.currentUser = JSON.parse(userJson);
+  private async loadCurrentUser() {
+    try {
+
+      const { data } = await supabase.auth.getSession();
+
+      if (data.session) {
+
+        const user = data.session.user;
+
+        this.accessToken = data.session.access_token;
+
+        this.currentUser = {
+          id: user.id,
+          name: user.user_metadata?.name || "Usuário",
+          email: user.email || "",
+          createdAt: user.created_at,
+          avatar: user.user_metadata?.avatar,
+        };
+
+      }
+
+    } catch (error) {
+      console.error("Erro ao carregar usuário:", error);
     }
   }
 
-  register(name: string, email: string, password: string): { success: boolean; error?: string } {
-    // Verificar se email já existe
-    const users = this.getAllUsers();
-    if (users.find((u) => u.email === email)) {
-      return { success: false, error: "Email já cadastrado" };
+  async register(
+    name: string,
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; error?: string }> {
+
+    try {
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name
+          }
+        }
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        this.currentUser = {
+          id: data.user.id,
+          name: name,
+          email: data.user.email || "",
+          createdAt: data.user.created_at,
+        };
+      }
+
+      return { success: true };
+
+    } catch (error: any) {
+      console.error("Register error:", error);
+      return { success: false, error: "Erro ao cadastrar" };
     }
 
-    // Criar novo usuário
-    const user: User = {
-      id: Date.now().toString(),
-      name,
-      email,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Salvar senha (em produção seria hash)
-    const passwords = JSON.parse(localStorage.getItem("passwords") || "{}");
-    passwords[user.id] = password;
-    localStorage.setItem("passwords", JSON.stringify(passwords));
-
-    // Salvar usuário
-    users.push(user);
-    localStorage.setItem("users", JSON.stringify(users));
-
-    // Criar dados iniciais do usuário
-    const initialData: UserData = {
-      moodEntries: [],
-      panicEvents: [],
-      communityPosts: [],
-      settings: {
-        name,
-        emergencyContact: "",
-        emergencyName: "",
-        notifications: true,
-        dailyReminders: true,
-        crisisAlerts: true,
-        autoSOS: false,
-      },
-    };
-    localStorage.setItem(`userData_${user.id}`, JSON.stringify(initialData));
-
-    // Fazer login automático
-    this.currentUser = user;
-    localStorage.setItem("currentUser", JSON.stringify(user));
-
-    return { success: true };
   }
 
-  login(email: string, password: string): { success: boolean; error?: string } {
-    const users = this.getAllUsers();
-    const user = users.find((u) => u.email === email);
+  async login(
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; error?: string }> {
 
-    if (!user) {
-      return { success: false, error: "Usuário não encontrado" };
+    try {
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      const user = data.user;
+
+      this.accessToken = data.session.access_token;
+
+      this.currentUser = {
+        id: user.id,
+        name: user.user_metadata?.name || "Usuário",
+        email: user.email || "",
+        createdAt: user.created_at,
+        avatar: user.user_metadata?.avatar,
+      };
+
+      return { success: true };
+
+    } catch (error: any) {
+      console.error("Login error:", error);
+      return { success: false, error: "Erro ao fazer login" };
     }
 
-    const passwords = JSON.parse(localStorage.getItem("passwords") || "{}");
-    if (passwords[user.id] !== password) {
-      return { success: false, error: "Senha incorreta" };
-    }
-
-    this.currentUser = user;
-    localStorage.setItem("currentUser", JSON.stringify(user));
-
-    return { success: true };
   }
 
-  logout() {
+  async logout() {
+
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    }
+
     this.currentUser = null;
-    localStorage.removeItem("currentUser");
+    this.accessToken = null;
+
   }
 
   getCurrentUser(): User | null {
@@ -134,57 +157,59 @@ class AuthService {
     return this.currentUser !== null;
   }
 
-  private getAllUsers(): User[] {
-    return JSON.parse(localStorage.getItem("users") || "[]");
+  getAccessToken(): string | null {
+    return this.accessToken;
   }
 
-  getUserData(): UserData | null {
-    if (!this.currentUser) return null;
-    const data = localStorage.getItem(`userData_${this.currentUser.id}`);
-    return data ? JSON.parse(data) : null;
+  getUserData(): UserData {
+    return this.userData;
   }
 
-  updateUserData(data: Partial<UserData>) {
-    if (!this.currentUser) return;
-    const currentData = this.getUserData() || {
-      moodEntries: [],
-      panicEvents: [],
-      communityPosts: [],
-      settings: {} as any,
+  async updateUserData(data: Partial<UserData>) {
+
+    this.userData = {
+      ...this.userData,
+      ...data,
     };
-    const updatedData = { ...currentData, ...data };
-    localStorage.setItem(`userData_${this.currentUser.id}`, JSON.stringify(updatedData));
+
   }
 
-  updateAvatar(avatarBase64: string) {
-    if (!this.currentUser) return;
-    
-    this.currentUser.avatar = avatarBase64;
-    localStorage.setItem("currentUser", JSON.stringify(this.currentUser));
-    
-    // Atualizar no array de usuários
-    const users = this.getAllUsers();
-    const index = users.findIndex(u => u.id === this.currentUser!.id);
-    if (index !== -1) {
-      users[index].avatar = avatarBase64;
-      localStorage.setItem("users", JSON.stringify(users));
+  async updateAvatar(avatarBase64: string) {
+
+    try {
+
+      await supabase.auth.updateUser({
+        data: { avatar: avatarBase64 },
+      });
+
+      if (this.currentUser) {
+        this.currentUser.avatar = avatarBase64;
+      }
+
+    } catch (error) {
+      console.error("Erro ao atualizar avatar:", error);
     }
+
   }
 
-  removeAvatar() {
-    if (!this.currentUser) return;
-    
-    delete this.currentUser.avatar;
-    localStorage.setItem("currentUser", JSON.stringify(this.currentUser));
-    
-    // Atualizar no array de usuários
-    const users = this.getAllUsers();
-    const index = users.findIndex(u => u.id === this.currentUser!.id);
-    if (index !== -1) {
-      delete users[index].avatar;
-      localStorage.setItem("users", JSON.stringify(users));
+  async removeAvatar() {
+
+    try {
+
+      await supabase.auth.updateUser({
+        data: { avatar: null },
+      });
+
+      if (this.currentUser) {
+        delete this.currentUser.avatar;
+      }
+
+    } catch (error) {
+      console.error("Erro ao remover avatar:", error);
     }
+
   }
+
 }
 
 export const authService = new AuthService();

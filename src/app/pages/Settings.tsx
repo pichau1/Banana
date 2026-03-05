@@ -31,8 +31,8 @@ export function Settings() {
     }
   }, []);
 
-  const handleSave = () => {
-    authService.updateUserData({ settings });
+  const handleSave = async () => {
+    await authService.updateUserData({ settings });
     toast.success("Configurações salvas com sucesso!");
   };
 
@@ -79,45 +79,45 @@ export function Settings() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
           Configurações
         </h1>
-        <p className="text-gray-600">
+        <p className="text-sm sm:text-base text-gray-600">
           Personalize sua experiência no MindCare
         </p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Profile Settings */}
-        <Card className="p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <User className="h-6 w-6 text-purple-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Perfil</h2>
+        <Card className="p-4 sm:p-6">
+          <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+            <User className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Perfil</h2>
           </div>
 
           {/* Avatar Section */}
-          <div className="flex items-center space-x-6 mb-6 pb-6 border-b">
-            <Avatar className="w-24 h-24">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 mb-6 pb-6 border-b">
+            <Avatar className="w-20 h-20 sm:w-24 sm:h-24">
               {user?.avatar ? (
                 <AvatarImage src={user.avatar} alt={user.name} />
               ) : (
-                <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-2xl">
+                <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xl sm:text-2xl">
                   {user ? getInitials(user.name) : "U"}
                 </AvatarFallback>
               )}
             </Avatar>
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-1">{user?.name}</h3>
-              <p className="text-sm text-gray-600 mb-3">{user?.email}</p>
-              <div className="flex space-x-2">
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">{user?.name}</h3>
+              <p className="text-xs sm:text-sm text-gray-600 mb-3">{user?.email}</p>
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   onClick={() => fileInputRef.current?.click()}
                   variant="outline"
                   size="sm"
-                  className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                  className="border-purple-300 text-purple-700 hover:bg-purple-50 w-full sm:w-auto text-xs sm:text-sm"
                 >
-                  <Camera className="h-4 w-4 mr-2" />
+                  <Camera className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                   Alterar Foto
                 </Button>
                 {user?.avatar && (
@@ -125,9 +125,9 @@ export function Settings() {
                     onClick={handleRemoveAvatar}
                     variant="outline"
                     size="sm"
-                    className="border-red-300 text-red-700 hover:bg-red-50"
+                    className="border-red-300 text-red-700 hover:bg-red-50 w-full sm:w-auto text-xs sm:text-sm"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                     Remover
                   </Button>
                 )}
@@ -157,12 +157,12 @@ export function Settings() {
         </Card>
 
         {/* Emergency Contact */}
-        <Card className="p-6 border-red-200 bg-red-50/30">
-          <div className="flex items-center space-x-3 mb-6">
-            <Phone className="h-6 w-6 text-red-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Contato de Emergência</h2>
+        <Card className="p-4 sm:p-6 border-red-200 bg-red-50/30">
+          <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+            <Phone className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Contato de Emergência</h2>
           </div>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-xs sm:text-sm text-gray-600 mb-4">
             Em caso de crise severa, podemos alertar automaticamente este contato com sua
             localização GPS.
           </p>
@@ -207,10 +207,10 @@ export function Settings() {
         </Card>
 
         {/* Notifications */}
-        <Card className="p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <Bell className="h-6 w-6 text-purple-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Notificações</h2>
+        <Card className="p-4 sm:p-6">
+          <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+            <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Notificações</h2>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -266,21 +266,21 @@ export function Settings() {
         </Card>
 
         {/* Privacy */}
-        <Card className="p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <Shield className="h-6 w-6 text-purple-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Privacidade e Dados</h2>
+        <Card className="p-4 sm:p-6">
+          <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+            <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Privacidade e Dados</h2>
           </div>
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-xs sm:text-sm text-gray-600">
               Seus dados são criptografados e armazenados com segurança. Você tem controle total
               sobre suas informações.
             </p>
             <Separator />
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full text-sm sm:text-base">
               Exportar Meus Dados
             </Button>
-            <Button variant="outline" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50">
+            <Button variant="outline" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 text-sm sm:text-base">
               Excluir Minha Conta
             </Button>
           </div>
@@ -288,7 +288,7 @@ export function Settings() {
 
         {/* Save Button */}
         <div className="flex justify-end">
-          <Button onClick={handleSave} className="bg-purple-600 hover:bg-purple-700">
+          <Button onClick={handleSave} className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto text-sm sm:text-base">
             <Save className="h-4 w-4 mr-2" />
             Salvar Configurações
           </Button>

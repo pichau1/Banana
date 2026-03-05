@@ -13,6 +13,9 @@ import autoTable from "jspdf-autotable";
 export function Reports() {
   const [moodData, setMoodData] = useState<any[]>([]);
   const [panicEvents, setPanicEvents] = useState<any[]>([]);
+  const [weeklyAverage, setWeeklyAverage] = useState(0);
+  const [previousWeekAverage, setPreviousWeekAverage] = useState(0);
+  const [trend, setTrend] = useState(0);
   const user = authService.getCurrentUser();
   const userData = authService.getUserData();
 
@@ -24,12 +27,39 @@ export function Reports() {
         humor: entry.mood,
         energia: entry.energy,
       }));
-      setMoodData(moodEntries.length > 0 ? moodEntries : generateSampleData());
-      setPanicEvents(userData.panicEvents);
+      
+      const finalData = moodEntries.length > 0 ? moodEntries : generateSampleData();
+      setMoodData(finalData);
+      setPanicEvents(userData.panicEvents || []);
+
+      // Calculate averages
+      if (finalData.length > 0) {
+        const lastSevenDays = finalData.slice(-7);
+        const weekAvg = Math.round(lastSevenDays.reduce((acc, d) => acc + d.humor, 0) / lastSevenDays.length);
+        setWeeklyAverage(weekAvg);
+
+        if (finalData.length > 7) {
+          const previousSevenDays = finalData.slice(-14, -7);
+          const prevAvg = Math.round(previousSevenDays.reduce((acc, d) => acc + d.humor, 0) / previousSevenDays.length);
+          setPreviousWeekAverage(prevAvg);
+          setTrend(weekAvg - prevAvg);
+        }
+      }
     } else {
-      setMoodData(generateSampleData());
+      const sampleData = generateSampleData();
+      setMoodData(sampleData);
+      
+      // Calculate sample averages
+      const lastSevenDays = sampleData.slice(-7);
+      const weekAvg = Math.round(lastSevenDays.reduce((acc, d) => acc + d.humor, 0) / 7);
+      setWeeklyAverage(weekAvg);
+
+      const previousSevenDays = sampleData.slice(-14, -7);
+      const prevAvg = Math.round(previousSevenDays.reduce((acc, d) => acc + d.humor, 0) / 7);
+      setPreviousWeekAverage(prevAvg);
+      setTrend(weekAvg - prevAvg);
     }
-  }, []);
+  }, [userData]);
 
   const generateSampleData = () => {
     return Array.from({ length: 30 }, (_, i) => {
@@ -63,14 +93,6 @@ export function Reports() {
     doc.text(`Período: Últimos 30 dias`, 14, 69);
     
     // Summary
-    const weeklyAverage = moodData.length > 0
-      ? Math.round(moodData.slice(-7).reduce((acc, d) => acc + d.humor, 0) / Math.min(7, moodData.length))
-      : 0;
-    const previousWeekAverage = moodData.length > 7
-      ? Math.round(moodData.slice(-14, -7).reduce((acc, d) => acc + d.humor, 0) / 7)
-      : 0;
-    const trend = weeklyAverage - previousWeekAverage;
-    
     doc.setFontSize(16);
     doc.setTextColor(147, 51, 234);
     doc.text("Resumo Executivo", 14, 85);
@@ -162,66 +184,66 @@ export function Reports() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div className="mb-4 sm:mb-0">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
             Relatórios e Insights
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Acompanhe seu progresso ao longo do tempo
           </p>
         </div>
-        <Button onClick={handleDownloadReport} className="bg-purple-600 hover:bg-purple-700">
+        <Button onClick={handleDownloadReport} className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto">
           <Download className="h-4 w-4 mr-2" />
           Baixar PDF para Médico
         </Button>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="p-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Humor Médio (7 dias)</h3>
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">Humor Médio (7 dias)</h3>
             {trend > 0 ? (
-              <TrendingUp className="h-5 w-5 text-green-600" />
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
             ) : (
-              <TrendingDown className="h-5 w-5 text-red-600" />
+              <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
             )}
           </div>
           <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-bold text-gray-900">{weeklyAverage}</span>
-            <span className="text-sm text-gray-500">/100</span>
+            <span className="text-2xl sm:text-3xl font-bold text-gray-900">{weeklyAverage}</span>
+            <span className="text-xs sm:text-sm text-gray-500">/100</span>
           </div>
-          <p className={`text-sm mt-2 ${trend > 0 ? "text-green-600" : "text-red-600"}`}>
+          <p className={`text-xs sm:text-sm mt-2 ${trend > 0 ? "text-green-600" : "text-red-600"}`}>
             {trend > 0 ? "+" : ""}{trend} pontos vs. semana anterior
           </p>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Crises de Pânico (30 dias)</h3>
-            <Calendar className="h-5 w-5 text-blue-600" />
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">Crises de Pânico (30 dias)</h3>
+            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
           </div>
           <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-bold text-gray-900">{panicEvents.length}</span>
-            <span className="text-sm text-gray-500">eventos</span>
+            <span className="text-2xl sm:text-3xl font-bold text-gray-900">{panicEvents.length}</span>
+            <span className="text-xs sm:text-sm text-gray-500">eventos</span>
           </div>
-          <p className="text-sm text-gray-600 mt-2">
-            Média de 1 evento por semana
+          <p className="text-xs sm:text-sm text-gray-600 mt-2">
+            {panicEvents.length === 0 ? "Nenhum evento registrado" : `Média de ${Math.round(panicEvents.length / 4)} eventos por semana`}
           </p>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Check-ins Realizados</h3>
-            <FileText className="h-5 w-5 text-purple-600" />
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">Check-ins Realizados</h3>
+            <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
           </div>
           <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-bold text-gray-900">28</span>
-            <span className="text-sm text-gray-500">/ 30 dias</span>
+            <span className="text-2xl sm:text-3xl font-bold text-gray-900">{moodData.length}</span>
+            <span className="text-xs sm:text-sm text-gray-500">registros</span>
           </div>
-          <p className="text-sm text-green-600 mt-2">
-            93% de adesão - Excelente!
+          <p className={`text-xs sm:text-sm mt-2 ${moodData.length >= 20 ? "text-green-600" : "text-yellow-600"}`}>
+            {moodData.length >= 20 ? `${Math.round((moodData.length / 30) * 100)}% de adesão - Excelente!` : "Continue registrando diariamente"}
           </p>
         </Card>
       </div>
@@ -229,32 +251,33 @@ export function Reports() {
       {/* Charts Tabs */}
       <Tabs defaultValue="mood" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="mood">Humor</TabsTrigger>
-          <TabsTrigger value="energy">Energia</TabsTrigger>
-          <TabsTrigger value="panic">Pânico</TabsTrigger>
+          <TabsTrigger value="mood" className="text-xs sm:text-sm">Humor</TabsTrigger>
+          <TabsTrigger value="energy" className="text-xs sm:text-sm">Energia</TabsTrigger>
+          <TabsTrigger value="panic" className="text-xs sm:text-sm">Pânico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="mood">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Histórico de Humor (30 dias)</h3>
-            <ResponsiveContainer width="100%" height={350}>
+          <Card className="p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Histórico de Humor (30 dias)</h3>
+            <ResponsiveContainer width="100%" height={300}>
               <LineChart data={moodData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="date" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" domain={[0, 100]} />
+                <XAxis dataKey="date" stroke="#6b7280" style={{ fontSize: '12px' }} />
+                <YAxis stroke="#6b7280" domain={[0, 100]} style={{ fontSize: '12px' }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "white",
                     border: "1px solid #e5e7eb",
                     borderRadius: "8px",
+                    fontSize: '12px'
                   }}
                 />
                 <Line
                   type="monotone"
                   dataKey="humor"
                   stroke="#9333ea"
-                  strokeWidth={3}
-                  dot={{ fill: "#9333ea", r: 4 }}
+                  strokeWidth={2}
+                  dot={{ fill: "#9333ea", r: 3 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -262,18 +285,19 @@ export function Reports() {
         </TabsContent>
 
         <TabsContent value="energy">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Níveis de Energia (30 dias)</h3>
-            <ResponsiveContainer width="100%" height={350}>
+          <Card className="p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Níveis de Energia (30 dias)</h3>
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart data={moodData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="date" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" domain={[0, 100]} />
+                <XAxis dataKey="date" stroke="#6b7280" style={{ fontSize: '12px' }} />
+                <YAxis stroke="#6b7280" domain={[0, 100]} style={{ fontSize: '12px' }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "white",
                     border: "1px solid #e5e7eb",
                     borderRadius: "8px",
+                    fontSize: '12px'
                   }}
                 />
                 <Bar dataKey="energia" fill="#3b82f6" radius={[8, 8, 0, 0]} />
@@ -283,59 +307,63 @@ export function Reports() {
         </TabsContent>
 
         <TabsContent value="panic">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Registro de Crises de Pânico</h3>
+          <Card className="p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Registro de Crises de Pânico</h3>
             <div className="space-y-4">
-              {panicEvents.map((event, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-1">
-                      <span className="font-semibold text-gray-900">{event.date}</span>
-                      <span className="text-sm text-gray-600">{event.time}</span>
-                      <Badge
-                        className={
-                          event.severity === "Alto"
-                            ? "bg-red-100 text-red-800"
-                            : event.severity === "Moderado"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-green-100 text-green-800"
-                        }
-                      >
-                        {event.severity}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-600">Duração: {event.duration}</p>
-                  </div>
+              {panicEvents.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 text-sm sm:text-base">
+                  Nenhuma crise de pânico registrada. Continue cuidando de si mesmo! 💚
                 </div>
-              ))}
+              ) : (
+                panicEvents.map((event, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1">
+                        <span className="font-semibold text-gray-900 text-sm sm:text-base">{event.date}</span>
+                        <span className="text-xs sm:text-sm text-gray-600">{event.time}</span>
+                        <Badge
+                          className={
+                            event.severity === "Alto"
+                              ? "bg-red-100 text-red-800 text-xs"
+                              : event.severity === "Moderado"
+                              ? "bg-yellow-100 text-yellow-800 text-xs"
+                              : "bg-green-100 text-green-800 text-xs"
+                          }
+                        >
+                          {event.severity}
+                        </Badge>
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-600">Duração: {event.duration}</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </Card>
         </TabsContent>
       </Tabs>
 
       {/* Insights */}
-      <Card className="mt-6 p-6 bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Insights Personalizados</h3>
+      <Card className="mt-6 p-4 sm:p-6 bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Insights Personalizados</h3>
         <ul className="space-y-3">
           <li className="flex items-start space-x-3">
             <span className="text-purple-600 font-bold">•</span>
-            <p className="text-gray-700">
+            <p className="text-sm sm:text-base text-gray-700">
               Seus níveis de humor tendem a ser mais altos entre 8h-12h. Considere agendar
               atividades importantes nesse período.
             </p>
           </li>
           <li className="flex items-start space-x-3">
             <span className="text-purple-600 font-bold">•</span>
-            <p className="text-gray-700">
-              Você registrou menos crises de pânico nas semanas com maior adesão aos exercícios
-              de respiração.
+            <p className="text-sm sm:text-base text-gray-700">
+              Continue registrando seu humor diariamente para que possamos identificar padrões e ajudá-lo melhor.
             </p>
           </li>
           <li className="flex items-start space-x-3">
             <span className="text-purple-600 font-bold">•</span>
-            <p className="text-gray-700">
-              Sua energia está consistentemente mais baixa aos domingos. Isso pode ser um padrão
-              para discutir com seu terapeuta.
+            <p className="text-sm sm:text-base text-gray-700">
+              Compartilhe este relatório com seu terapeuta para um acompanhamento mais preciso.
             </p>
           </li>
         </ul>

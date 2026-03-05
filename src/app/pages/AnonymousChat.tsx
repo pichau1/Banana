@@ -107,22 +107,22 @@ export function AnonymousChat() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col" style={{ height: 'calc(100vh - 120px)' }}>
-      <div className="mb-6 flex-shrink-0">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col h-[calc(100vh-140px)] sm:h-[calc(100vh-120px)]">
+      <div className="mb-4 sm:mb-6 flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center space-x-3">
-            <div className="bg-gradient-to-br from-green-500 to-teal-500 p-3 rounded-full">
-              <Users className="h-6 w-6 text-white" />
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="bg-gradient-to-br from-green-500 to-teal-500 p-2 sm:p-3 rounded-full">
+              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Chat Anônimo</h1>
-              <p className="text-sm text-gray-600 mt-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Chat Anônimo</h1>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 Converse com alguém que também busca apoio
               </p>
             </div>
           </div>
           {isConnected && (
-            <Badge className="bg-green-100 text-green-800">
+            <Badge className="bg-green-100 text-green-800 hidden sm:flex">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
               Conectado
             </Badge>
@@ -131,10 +131,10 @@ export function AnonymousChat() {
       </div>
 
       {/* Safety Notice */}
-      <Card className="p-4 mb-4 bg-purple-50 border-purple-200 flex-shrink-0">
+      <Card className="p-3 sm:p-4 mb-4 bg-purple-50 border-purple-200 flex-shrink-0">
         <div className="flex items-start space-x-3">
-          <Shield className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-purple-900">
+          <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+          <div className="text-xs sm:text-sm text-purple-900">
             <strong>Espaço Seguro:</strong> Conversas são anônimas e privadas. Não compartilhe
             informações pessoais. Nossa IA monitora conversas para garantir um ambiente
             respeitoso.
@@ -144,26 +144,26 @@ export function AnonymousChat() {
 
       {/* Not Connected State */}
       {!isConnected && !isSearching && (
-        <Card className="flex-1 flex items-center justify-center p-8">
+        <Card className="flex-1 flex items-center justify-center p-6 sm:p-8">
           <div className="text-center max-w-md">
-            <div className="bg-gradient-to-br from-green-100 to-teal-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Users className="h-12 w-12 text-green-600" />
+            <div className="bg-gradient-to-br from-green-100 to-teal-100 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <Users className="h-10 w-10 sm:h-12 sm:w-12 text-green-600" />
             </div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">
               Conecte-se com alguém
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
               Você será conectado anonimamente com outra pessoa que também está buscando apoio.
               Conversem, compartilhem e apoiem-se mutuamente.
             </p>
             <Button
               onClick={handleConnect}
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-lg"
+              className="bg-green-600 hover:bg-green-700 text-white px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg w-full sm:w-auto"
             >
               <Search className="h-5 w-5 mr-2" />
               Buscar Conexão
             </Button>
-            <p className="text-sm text-gray-500 mt-4">
+            <p className="text-xs sm:text-sm text-gray-500 mt-3 sm:mt-4">
               Geralmente leva menos de 30 segundos
             </p>
           </div>
@@ -172,20 +172,20 @@ export function AnonymousChat() {
 
       {/* Searching State */}
       {isSearching && (
-        <Card className="flex-1 flex items-center justify-center p-8">
+        <Card className="flex-1 flex items-center justify-center p-6 sm:p-8">
           <div className="text-center">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="bg-gradient-to-br from-green-100 to-teal-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6"
+              className="bg-gradient-to-br from-green-100 to-teal-100 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6"
             >
-              <Search className="h-12 w-12 text-green-600" />
+              <Search className="h-10 w-10 sm:h-12 sm:w-12 text-green-600" />
             </motion.div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
               Procurando uma conexão...
             </h2>
-            <p className="text-gray-600">Aguarde enquanto encontramos alguém para você</p>
-            <div className="flex justify-center space-x-2 mt-6">
+            <p className="text-sm sm:text-base text-gray-600">Aguarde enquanto encontramos alguém para você</p>
+            <div className="flex justify-center space-x-2 mt-4 sm:mt-6">
               <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce"></div>
               <div
                 className="w-3 h-3 bg-green-500 rounded-full animate-bounce"
